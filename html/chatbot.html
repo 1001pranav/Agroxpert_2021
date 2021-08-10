@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Algoxpert Chatbot</title>
+    <style media="screen">
+      body{
+        background-color:honeydew;
+      }
+      nav{
+
+        border: 1px solid gold;
+      }
+      .container{
+        background-color:aliceblue;
+        width:50%;
+        border-radius:5px;
+        align-items:center;
+      }
+      #textarea
+      {
+        padding-top: 20px;
+
+      }
+      #text_inp{
+        border-radius: 20px;
+      }
+      .userText
+      {
+        background-color:#264029;
+        color: white;
+        padding: 10px;
+        border-radius: 10px;
+      }
+      .botText
+      {
+        background-color: #0CAC64;
+        color: white;
+        padding: 10px;
+        border-radius: 10px;
+
+
+      }
+      #chat
+      {
+        height: 500px;
+        overflow: auto;
+        margin-top: 10px;
+      }
+      {% if noti %}
+        #notification{
+          display:inline;
+          left:25%;
+        }
+      {% else %}
+       #notification{
+        display:none;
+        left:25%;
+       }
+      {% endif %}
+      #notification{
+        width:25%;
+      }
+
+    </style>
+
+
+  </head>
+  <body>
+    <nav class="navbar navbar-dark bg-dark">
+     <h1 class="h1 navbar-brand">Agroxpert</h1>
+     <div>
+        <a href="/farmer/Chat" class="btn btn-success" >Mail</a>
+        <a href="/" class="btn btn-danger" >Logout</a>
+     </div>
+    </nav>
+      <div class="card border-warning" id="notification">
+        {{notification}}
+      </div>
+      <div class="container" id="chat">
+
+      </div>
+
+    <div class="container fixed-bottom">
+
+      <form class="form-group" id="form" method="post">
+        {%csrf_token%}
+
+        <div class="row " id="footer">
+          <div class="col col-9">
+            <input type="hidden" name="check" value="chatbot" />
+            <input type="text" placeholder="Query" name="Search" class="form-control" id="text_inp" style=" border: 2px solid #0058b0;">
+            </div>
+            <div class="col col-3">
+            <button type="button" id="submit" class="btn btn-outline-primary " name="button"><i class="fa fa-send" style="font-size:24px;color:black;"></i></button>
+            <button type="button" id="speech" class="btn btn-outline-primary " onclick="runSpeechRecognition()" name="button"><i class="fa fa-microphone" style="font-size:24px;color:black;"></i></button> &nbsp; <span id="action"></span>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% block javascript %}
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
+      <script type="text/javascript">
+        function runSpeechRecognition() {
+                // get output div reference
+                var output = document.getElementById("output");
+                var text_inp = document.getElementById("text_inp");
+                // get action element reference
+                var action = document.getElementById("action");
+                // new speech recognition object
+                var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+                var recognition = new SpeechRecognition();
+
+                // This runs when the speech recognition service starts
+                recognition.onstart = function() {
+                    action.innerHTML = "<small>listening...</small>";
+                };
+
+                recognition.onspeechend = function() {
+                    action.innerHTML = "<small>stopped listening...</small>";
+                    recognition.stop();
+                }
+
+                // This runs when the speech recognition service returns result
+                recognition.onresult = function(event) {
+                    var transcript = event.results[0][0].transcript;
+                    text_inp.value=transcript;
+                    output.innerHTML = "<p> " + transcript +"<p> ";
+                    output.classList.remove("hide");
+                };
+
+                 // start recognition
+                 recognition.start();
+            }
+
+ $(document).ready(function(){
+                  $('#form').on('keydown',function(e){
+               if (e.keyCode == '13') {
+                 e.preventDefault();
+            $.post({
+              data : $('#form').serialize(),
+              url : "farmer/chatbot",
+              success: function(response){
+                var query='<p class="userText">{{user}} : <span>' + response.query + '</span><br></p>'
+                var reply='<p class="botText">Agroxpert : <span>' + response.Reply + '</span></p>'
+                $('#chat').append(query)
+                $('#chat').append(reply)
+                document.getElementById("text_inp").value = "";
+              }
+            })
+          }
+          })
+          $('#submit').on('click',function(){
+            $.post({
+              data : $('#form').serialize(),
+              url : "farmer/chatbot",
+              success: function(response){
+                var query='<p class="userText">{{user}} :<span>' + response.query + '</span></p>'
+                var reply='<p class="botText">Agroxpert :<span>' + response.Reply + '</span></p>'
+                $('#chat').append(query)
+                $('#chat').append(reply)
+                document.getElementById("text_inp").value = "";
+              }
+            })
+          })
+        })
+
+      </script>
+
+    {% endblock javascript %}
+    
+  </body>
+</html>
